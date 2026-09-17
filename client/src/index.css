@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .pulsing-red-avatar {
+    @apply animate-red-pulse border-2 border-red-500 bg-red-500/20 text-red-400;
+  }
+}
