@@ -6,6 +6,7 @@ import { Calendar, User as UserIcon } from 'lucide-react';
 interface TaskCardProps {
   task: Task;
   index: number;
+  onSelectTask?: (task: Task) => void;
 }
 
 const priorityConfig: Record<
@@ -38,7 +39,7 @@ const priorityConfig: Record<
   },
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, index, onSelectTask }) => {
   const p = priorityConfig[task.priority] || priorityConfig.MEDIUM;
 
   const initials = task.assignedUser?.name
@@ -57,10 +58,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-slate-900 border rounded-xl p-3.5 shadow-md transition-all duration-150 select-none group ${
+          onClick={() => onSelectTask?.(task)}
+          className={`bg-slate-900 border rounded-xl p-3.5 shadow-md transition-all duration-150 select-none group cursor-pointer ${
             snapshot.isDragging
               ? 'border-indigo-500 ring-2 ring-indigo-500/50 shadow-2xl scale-[1.02] bg-slate-850'
-              : 'border-slate-800 hover:border-slate-700 hover:shadow-indigo-500/5'
+              : 'border-slate-800 hover:border-indigo-500/50 hover:shadow-indigo-500/10'
           }`}
         >
           {/* Card Header: Title & Priority */}

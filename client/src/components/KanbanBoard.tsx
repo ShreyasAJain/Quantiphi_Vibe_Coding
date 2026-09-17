@@ -13,6 +13,7 @@ interface KanbanBoardProps {
   columnCounts: ColumnCounts;
   onRefreshBoard: () => void;
   onError: (msg: string) => void;
+  onSelectTask?: (task: Task) => void;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -20,6 +21,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   columnCounts,
   onRefreshBoard,
   onError,
+  onSelectTask,
 }) => {
   // Local state for optimistic UI updates
   const [columns, setColumns] = useState(initialColumns);
@@ -86,6 +88,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           count={columnCounts.TODO}
           tasks={columns.TODO}
           accentColor="bg-slate-400"
+          onSelectTask={onSelectTask}
         />
         <KanbanColumn
           status="IN_PROGRESS"
@@ -93,6 +96,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           count={columnCounts.IN_PROGRESS}
           tasks={columns.IN_PROGRESS}
           accentColor="bg-indigo-500 animate-pulse"
+          onSelectTask={onSelectTask}
         />
         <KanbanColumn
           status="DONE"
@@ -100,6 +104,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           count={columnCounts.DONE}
           tasks={columns.DONE}
           accentColor="bg-emerald-500"
+          onSelectTask={onSelectTask}
         />
       </div>
     </DragDropContext>

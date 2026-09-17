@@ -9,6 +9,7 @@ interface KanbanColumnProps {
   count: number;
   tasks: Task[];
   accentColor: string;
+  onSelectTask?: (task: Task) => void;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -17,6 +18,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   count,
   tasks,
   accentColor,
+  onSelectTask,
 }) => {
   return (
     <div className="flex flex-col bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl backdrop-blur min-h-[500px]">
@@ -54,7 +56,12 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
               </div>
             ) : (
               tasks.map((task, index) => (
-                <TaskCard key={task.id} task={task} index={index} />
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  index={index}
+                  onSelectTask={onSelectTask}
+                />
               ))
             )}
             {provided.placeholder}

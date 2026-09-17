@@ -189,6 +189,47 @@ const BUILDS: BuildMilestone[] = [
     ],
     status: 'Complete',
   },
+  {
+    id: 13,
+    title: 'Task Details, Mutation & Deletion Engine',
+    category: 'Interactive UI',
+    badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    files: ['client/src/components/TaskDetailModal.tsx', 'server/src/controllers/task.controller.ts'],
+    endpoints: ['PATCH /api/tasks/:id', 'DELETE /api/tasks/:id'],
+    highlights: [
+      'Click-to-inspect task cards with editable title, description, and status',
+      'Re-assign tasks dynamically to verified team members with live capacity preview',
+      'Atomic task deletion with database cascade integrity and instant UI sync',
+    ],
+    status: 'Complete',
+  },
+  {
+    id: 14,
+    title: 'Team Membership & Dynamic User Provisioning',
+    category: 'Backend API',
+    badgeColor: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+    files: ['client/src/components/TeamMembersModal.tsx', 'server/src/controllers/project.controller.ts'],
+    endpoints: ['GET /api/projects/:id/members', 'POST /api/projects/:id/members', 'POST /api/users'],
+    highlights: [
+      'Manage active team members and OWNER/MEMBER roles per project workspace',
+      'Add existing registered users to project or provision new users on-the-fly',
+      'Live team count indicator with instant multi-user workload distribution',
+    ],
+    status: 'Complete',
+  },
+  {
+    id: 15,
+    title: 'Multi-Dimensional Board Filter & Search Engine',
+    category: 'Frontend Core',
+    badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    files: ['client/src/components/BoardFilterToolbar.tsx'],
+    highlights: [
+      'Real-time keyword search across task titles and descriptions',
+      'Multi-priority filter (Low, Medium, High, Urgent)',
+      'Member-specific assignee filter with Unassigned task isolation and match counter',
+    ],
+    status: 'Complete',
+  },
 ];
 
 export const BuildPipelinePanel: React.FC = () => {
@@ -215,7 +256,7 @@ export const BuildPipelinePanel: React.FC = () => {
               <h2 className="text-sm font-bold text-white">Full Build Pipeline & Architecture Matrix</h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
-                12 / 12 Builds Live
+                15 / 15 Builds Live
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -237,7 +278,7 @@ export const BuildPipelinePanel: React.FC = () => {
             ) : (
               <>
                 <ChevronDown className="w-3.5 h-3.5" />
-                <span>Expand All Builds (1–12)</span>
+                <span>Expand All Builds (1–15)</span>
               </>
             )}
           </button>

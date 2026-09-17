@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project } from '../types';
-import { Kanban, Plus, FolderPlus, Layers } from 'lucide-react';
+import { Kanban, Plus, FolderPlus, Layers, Users } from 'lucide-react';
 
 interface HeaderProps {
   projects: Project[];
@@ -8,6 +8,8 @@ interface HeaderProps {
   onSelectProject: (id: string) => void;
   onOpenNewTaskModal: () => void;
   onOpenNewProjectModal: () => void;
+  onOpenTeamModal: () => void;
+  memberCount?: number;
   showBuildPipeline: boolean;
   onToggleBuildPipeline: () => void;
 }
@@ -18,6 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectProject,
   onOpenNewTaskModal,
   onOpenNewProjectModal,
+  onOpenTeamModal,
+  memberCount = 0,
   showBuildPipeline,
   onToggleBuildPipeline,
 }) => {
@@ -67,12 +71,12 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-purple-600/30 border-purple-500/50 text-purple-200 shadow-md shadow-purple-600/20'
                 : 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border-slate-700'
             }`}
-            title="View All Builds (1–12) Parallelly"
+            title="View All Builds (1–15) Parallelly"
           >
             <Layers className="w-3.5 h-3.5 text-purple-400" />
             <span className="hidden sm:inline">Build Pipeline</span>
             <span className="text-[10px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded font-bold">
-              12/12 Live
+              15/15 Live
             </span>
           </button>
 
@@ -83,6 +87,20 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <FolderPlus className="w-4 h-4 text-indigo-400" />
             <span className="hidden md:inline">New Project</span>
+          </button>
+
+          <button
+            onClick={onOpenTeamModal}
+            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 transition flex items-center gap-1.5"
+            title="Manage Team Members"
+          >
+            <Users className="w-4 h-4 text-emerald-400" />
+            <span className="hidden md:inline">Team</span>
+            {memberCount > 0 && (
+              <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.2 rounded font-bold">
+                {memberCount}
+              </span>
+            )}
           </button>
 
           <button

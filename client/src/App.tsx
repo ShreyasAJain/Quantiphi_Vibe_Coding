@@ -1,35 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from './services/api';
-import { Project, ProjectBoardState } from './types';
+import { Project, ProjectBoardState, ProjectMember, Task, Priority } from './types';
 import { Header } from './components/Header';
 import { KanbanBoard } from './components/KanbanBoard';
 import { WorkloadBar } from './components/WorkloadBar';
 import { BuildPipelinePanel } from './components/BuildPipelinePanel';
 import { CreateTaskModal } from './components/CreateTaskModal';
 import { CreateProjectModal } from './components/CreateProjectModal';
+import { TaskDetailModal } from './components/TaskDetailModal';
+import { TeamMembersModal } from './components/TeamMembersModal';
+import { BoardFilterToolbar } from './components/BoardFilterToolbar';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [boardState, setBoardState] = useState<ProjectBoardState | null>(null);
+  const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Modals & Parallel Inspector state
+  // Modals & Panels state
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState<boolean>(false);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState<boolean>(false);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showBuildPipeline, setShowBuildPipeline] = useState<boolean>(true);
+
+  // Filter toolbar state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedPriority, setSelectedPriority] = useState<Priority | 'ALL'>('ALL');
+  const [selectedAssignee, setSelectedAssignee] = useState<string>('');
 
   // 1. Initial Load: Fetch Projects
   useEffect(() => {
     loadProjects();
   }, []);
 
-  // 2. Fetch Board State when Selected Project changes
+  // 2. Fetch Board State & Project Members when Selected Project changes
   useEffect(() => {
     if (selectedProjectId) {
       loadBoard(selectedProjectId);
+      loadMembers(selectedProjectId);
     }
   }, [selectedProjectId]);
 
@@ -65,9 +77,19 @@ export function App() {
     }
   }
 
-  const handleTaskCreated = () => {
+  async function loadMembers(projectId: string) {
+    try {
+      const data = await api.getProjectMembers(projectId);
+      setMembers(data);
+    } catch (err: any) {
+      console.error('Failed to load project members', err);
+    }
+  }
+
+  const handleRefreshAll = () => {
     if (selectedProjectId) {
       loadBoard(selectedProjectId);
+      loadMembers(selectedProjectId);
     }
   };
 
@@ -75,15 +97,65 @@ export function App() {
     await loadProjects(newProjectId);
   };
 
+  // Filter logic across columns
+  const filteredColumns = useMemo(() => {
+    if (!boardState) return { TODO: [], IN_PROGRESS: [], DONE: [] };
+
+    const filterTask = (task: Task) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = task.title.toLowerCase().includes(q);
+        const matchDesc = task.description?.toLowerCase().includes(q) || false;
+        if (!matchTitle && !matchDesc) return false;
+      }
+      if (selectedPriority !== 'ALL' && task.priority !== selectedPriority) {
+        return false;
+      }
+      if (selectedAssignee) {
+        if (selectedAssignee === 'unassigned') {
+          if (task.assignedUserId) return false;
+        } else if (task.assignedUserId !== selectedAssignee) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    return {
+      TODO: boardState.columns.TODO.filter(filterTask),
+      IN_PROGRESS: boardState.columns.IN_PROGRESS.filter(filterTask),
+      DONE: boardState.columns.DONE.filter(filterTask),
+    };
+  }, [boardState, searchQuery, selectedPriority, selectedAssignee]);
+
+  const totalTasksCount = boardState
+    ? boardState.columns.TODO.length +
+      boardState.columns.IN_PROGRESS.length +
+      boardState.columns.DONE.length
+    : 0;
+
+  const filteredTasksCount =
+    filteredColumns.TODO.length +
+    filteredColumns.IN_PROGRESS.length +
+    filteredColumns.DONE.length;
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedPriority('ALL');
+    setSelectedAssignee('');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* App Header with Project Switcher & Build Pipeline Toggle */}
+      {/* App Header with Project Switcher, Team Manager & Build Pipeline Toggle */}
       <Header
         projects={projects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(id) => setSelectedProjectId(id)}
         onOpenNewTaskModal={() => setIsCreateTaskModalOpen(true)}
         onOpenNewProjectModal={() => setIsCreateProjectModalOpen(true)}
+        onOpenTeamModal={() => setIsTeamModalOpen(true)}
+        memberCount={members.length}
         showBuildPipeline={showBuildPipeline}
         onToggleBuildPipeline={() => setShowBuildPipeline(!showBuildPipeline)}
       />
@@ -152,12 +224,27 @@ export function App() {
             {/* Team Workload Balancing Monitor (Server-Calculated Metrics) */}
             <WorkloadBar workloads={boardState.userWorkloads} />
 
-            {/* Kanban Columns with Drag-and-Drop */}
+            {/* Multi-Dimensional Board Filter & Search Toolbar */}
+            <BoardFilterToolbar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedPriority={selectedPriority}
+              onPriorityChange={setSelectedPriority}
+              selectedAssignee={selectedAssignee}
+              onAssigneeChange={setSelectedAssignee}
+              members={members}
+              totalTasks={totalTasksCount}
+              filteredTasks={filteredTasksCount}
+              onResetFilters={resetFilters}
+            />
+
+            {/* Kanban Columns with Drag-and-Drop & Card Inspection */}
             <KanbanBoard
-              initialColumns={boardState.columns}
+              initialColumns={filteredColumns}
               columnCounts={boardState.columnCounts}
-              onRefreshBoard={() => loadBoard(selectedProjectId)}
+              onRefreshBoard={handleRefreshAll}
               onError={(msg) => setError(msg)}
+              onSelectTask={(task) => setSelectedTask(task)}
             />
           </div>
         )}
@@ -169,7 +256,7 @@ export function App() {
           isOpen={isCreateTaskModalOpen}
           projectId={selectedProjectId}
           onClose={() => setIsCreateTaskModalOpen(false)}
-          onTaskCreated={handleTaskCreated}
+          onTaskCreated={handleRefreshAll}
           onError={(msg) => setError(msg)}
         />
       )}
@@ -181,6 +268,30 @@ export function App() {
         onProjectCreated={handleProjectCreated}
         onError={(msg) => setError(msg)}
       />
+
+      {/* Task Detail & Edit / Delete Modal */}
+      {selectedTask && selectedProjectId && (
+        <TaskDetailModal
+          task={selectedTask}
+          projectId={selectedProjectId}
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onTaskUpdated={handleRefreshAll}
+          onError={(msg) => setError(msg)}
+        />
+      )}
+
+      {/* Team Members Management Modal */}
+      {selectedProjectId && boardState && (
+        <TeamMembersModal
+          isOpen={isTeamModalOpen}
+          projectId={selectedProjectId}
+          projectName={boardState.project.name}
+          onClose={() => setIsTeamModalOpen(false)}
+          onMembersUpdated={handleRefreshAll}
+          onError={(msg) => setError(msg)}
+        />
+      )}
     </div>
   );
 }
