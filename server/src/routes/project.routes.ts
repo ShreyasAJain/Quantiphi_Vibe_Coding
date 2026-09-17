@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ProjectController } from '../controllers/project.controller';
 import { TaskController } from '../controllers/task.controller';
+import { BoardController } from '../controllers/board.controller';
 import { validateRequest } from '../middlewares/validateRequest';
 import {
   createProjectSchema,
@@ -38,6 +39,18 @@ router.get(
   '/:id/tasks',
   validateRequest(getTasksQuerySchema),
   TaskController.getTasksForProject
+);
+
+// Board & Workload Endpoints (Core Assessment Rules)
+router.get(
+  '/:id/board',
+  validateRequest(projectIdParamSchema),
+  BoardController.getBoardState
+);
+router.get(
+  '/:id/workload',
+  validateRequest(projectIdParamSchema),
+  BoardController.getWorkload
 );
 
 export const projectRouter = router;
