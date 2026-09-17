@@ -3,6 +3,10 @@ import { api } from './services/api';
 import { Project, ProjectBoardState } from './types';
 import { Header } from './components/Header';
 import { KanbanBoard } from './components/KanbanBoard';
+import { WorkloadBar } from './components/WorkloadBar';
+import { BuildPipelinePanel } from './components/BuildPipelinePanel';
+import { CreateTaskModal } from './components/CreateTaskModal';
+import { CreateProjectModal } from './components/CreateProjectModal';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export function App() {
@@ -11,6 +15,11 @@ export function App() {
   const [boardState, setBoardState] = useState<ProjectBoardState | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modals & Parallel Inspector state
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState<boolean>(false);
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState<boolean>(false);
+  const [showBuildPipeline, setShowBuildPipeline] = useState<boolean>(true);
 
   // 1. Initial Load: Fetch Projects
   useEffect(() => {
@@ -24,13 +33,16 @@ export function App() {
     }
   }, [selectedProjectId]);
 
-  async function loadProjects() {
+  async function loadProjects(selectProjectId?: string) {
     try {
       setIsLoading(true);
       setError(null);
       const data = await api.getProjects();
       setProjects(data);
-      if (data.length > 0) {
+
+      if (selectProjectId) {
+        setSelectedProjectId(selectProjectId);
+      } else if (data.length > 0 && !selectedProjectId) {
         setSelectedProjectId(data[0].id);
       }
     } catch (err: any) {
@@ -53,14 +65,27 @@ export function App() {
     }
   }
 
+  const handleTaskCreated = () => {
+    if (selectedProjectId) {
+      loadBoard(selectedProjectId);
+    }
+  };
+
+  const handleProjectCreated = async (newProjectId: string) => {
+    await loadProjects(newProjectId);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* App Header with Project Switcher & Build Pipeline Toggle */}
       <Header
         projects={projects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(id) => setSelectedProjectId(id)}
-        onOpenNewTaskModal={() => alert('Task Modal will be connected in Phase 10')}
-        onOpenNewProjectModal={() => alert('Project Modal will be connected in Phase 11')}
+        onOpenNewTaskModal={() => setIsCreateTaskModalOpen(true)}
+        onOpenNewProjectModal={() => setIsCreateProjectModalOpen(true)}
+        showBuildPipeline={showBuildPipeline}
+        onToggleBuildPipeline={() => setShowBuildPipeline(!showBuildPipeline)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
@@ -81,6 +106,13 @@ export function App() {
           </div>
         )}
 
+        {/* Parallel Build Progression & System Architecture Matrix */}
+        {showBuildPipeline && (
+          <div className="animate-fadeIn">
+            <BuildPipelinePanel />
+          </div>
+        )}
+
         {/* Loading Spinner */}
         {isLoading && !boardState && (
           <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
@@ -89,9 +121,10 @@ export function App() {
           </div>
         )}
 
-        {/* Project Shell Details */}
+        {/* Active Project & Interactive Kanban Section */}
         {boardState && (
           <div className="space-y-6">
+            {/* Project Banner & Live Column Counters */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -99,7 +132,7 @@ export function App() {
                     {boardState.project.name}
                   </h2>
                   <p className="text-xs text-slate-400 mt-1">
-                    {boardState.project.description || 'No description provided'}
+                    {boardState.project.description || 'Workspace actively monitored by the Workload Balancing Engine'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
@@ -116,6 +149,9 @@ export function App() {
               </div>
             </div>
 
+            {/* Team Workload Balancing Monitor (Server-Calculated Metrics) */}
+            <WorkloadBar workloads={boardState.userWorkloads} />
+
             {/* Kanban Columns with Drag-and-Drop */}
             <KanbanBoard
               initialColumns={boardState.columns}
@@ -126,6 +162,25 @@ export function App() {
           </div>
         )}
       </main>
+
+      {/* Task Creation Modal */}
+      {selectedProjectId && (
+        <CreateTaskModal
+          isOpen={isCreateTaskModalOpen}
+          projectId={selectedProjectId}
+          onClose={() => setIsCreateTaskModalOpen(false)}
+          onTaskCreated={handleTaskCreated}
+          onError={(msg) => setError(msg)}
+        />
+      )}
+
+      {/* Project Creation Modal */}
+      <CreateProjectModal
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+        onProjectCreated={handleProjectCreated}
+        onError={(msg) => setError(msg)}
+      />
     </div>
   );
 }

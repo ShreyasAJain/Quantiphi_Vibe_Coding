@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project } from '../types';
-import { Kanban, Plus, FolderPlus } from 'lucide-react';
+import { Kanban, Plus, FolderPlus, Layers } from 'lucide-react';
 
 interface HeaderProps {
   projects: Project[];
@@ -8,6 +8,8 @@ interface HeaderProps {
   onSelectProject: (id: string) => void;
   onOpenNewTaskModal: () => void;
   onOpenNewProjectModal: () => void;
+  showBuildPipeline: boolean;
+  onToggleBuildPipeline: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,6 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectProject,
   onOpenNewTaskModal,
   onOpenNewProjectModal,
+  showBuildPipeline,
+  onToggleBuildPipeline,
 }) => {
   return (
     <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-30 px-4 lg:px-8 py-3.5">
@@ -55,6 +59,22 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
             </select>
           </div>
+
+          <button
+            onClick={onToggleBuildPipeline}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${
+              showBuildPipeline
+                ? 'bg-purple-600/30 border-purple-500/50 text-purple-200 shadow-md shadow-purple-600/20'
+                : 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title="View All Builds (1–12) Parallelly"
+          >
+            <Layers className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">Build Pipeline</span>
+            <span className="text-[10px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded font-bold">
+              12/12 Live
+            </span>
+          </button>
 
           <button
             onClick={onOpenNewProjectModal}
