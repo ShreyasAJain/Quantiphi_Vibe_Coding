@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from './services/api';
 import { Project, ProjectBoardState } from './types';
 import { Header } from './components/Header';
+import { KanbanBoard } from './components/KanbanBoard';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export function App() {
@@ -115,12 +116,13 @@ export function App() {
               </div>
             </div>
 
-            <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-sm">
-              <p className="font-semibold text-slate-200">Frontend Foundation Connected Successfully!</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Kanban columns, drag-and-drop cards, and team workload bar will render here in Phases 9–13.
-              </p>
-            </div>
+            {/* Kanban Columns with Drag-and-Drop */}
+            <KanbanBoard
+              initialColumns={boardState.columns}
+              columnCounts={boardState.columnCounts}
+              onRefreshBoard={() => loadBoard(selectedProjectId)}
+              onError={(msg) => setError(msg)}
+            />
           </div>
         )}
       </main>
